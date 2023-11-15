@@ -25,6 +25,29 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 *   **\--dump DUMP \[DUMP ...\]**: Dumps (append) one GeoPackage db to another using ogr2ogr.
 *   **\--execute_sql DB_FILE SQL_STATEMENT** Execute SQL statements on an SQLite3 database.
 
+1. **Clone this Repository**
+
+2. **Build the Docker Image:**
+    ```bash
+    docker build -t tiles-to-gpkg-cli .
+    ```
+   
+   This command builds the Docker image locally using the provided Dockerfile.
+
+3. **Run the Docker Container:**
+    ```bash
+    docker run -it --name ttgpkg --rm \
+    -v "/path/to/your/data/folder":/data \
+    tiles-to-gpkg-cli
+    ```
+
+    Replace `/path/to/your/data/folder` with the actual path to the folder containing your QMESH data.
+
+4. **Execute Commands:**
+
+    Once inside the container, you can execute `tilesToGpkg` commands on your data.
+
+
 ### **Examples**:
 
 ##### Watch a Directory for Specific File Patterns:
@@ -49,9 +72,10 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 
 `tilesToGpkg --execute_sql DB_FILE "SELECT COUNT(fid), zoom_level, tile_column, tile_row FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row HAVING COUNT(fid) > 1 ORDER BY COUNT(fid) DESC;"`
 
-**Remove duplocations:**
+**Remove duplications:**
 
 `tilesToGpkg --execute_sql DB_FILE "DELETE FROM terrain_tiles WHERE fid NOT IN ( SELECT fid FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row)"`
 
 
-#### **For more detailed information, run `tilesToGpkg --help`**.
+#### **For more information, run `tilesToGpkg --help`**.
+

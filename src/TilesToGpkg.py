@@ -55,6 +55,7 @@ class TilesToGpkg:
             raise RuntimeError("Failed to create GeoPackage.")
         
         self.ds = ds
+        self.ds.ExecuteSQL("PRAGMA journal_mode = wal;")
 
         tiles_table = ds.CreateLayer(TERRAIN_TILES_TABLE, geom_type=ogr.wkbNone)
         layer_json_table = ds.CreateLayer(LAYER_JSON_TABLE, geom_type=ogr.wkbNone)

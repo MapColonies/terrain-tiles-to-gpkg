@@ -1,7 +1,8 @@
-import sqlite3
+import sqlite3, logging
 
-MAX_BATCH_SIZE = 20000
+MAX_BATCH_SIZE = 5000
 
+logger = logging.getLogger(__name__)
 class HistoryDatabase:
     def __init__(self, db_file_path: str):
         self.db_file_path = db_file_path
@@ -25,6 +26,7 @@ class HistoryDatabase:
         self.cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_directory ON history (directory);"
         )
+        self.cursor.execute("PRAGMA journal_mode = wal;")
         self.conn.commit()
 
     def update_history(self, directory):
@@ -70,4 +72,4 @@ class HistoryDatabase:
             if self.updates_batch:
                 self.insert_or_update_history_entry_batch(self.updates_batch)
             self.conn.close()
-            print("Closed SQLite database connection.")
+            logger.debug("Closed SQLite history database connection.")
