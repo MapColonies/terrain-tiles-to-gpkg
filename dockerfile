@@ -1,11 +1,11 @@
 FROM andrejreznik/python-gdal:py3.8.2-gdal3.0.4 AS buildStage
 
-WORKDIR /app
-COPY . /app
+WORKDIR /_tilesToGpkgCli
+COPY . /_tilesToGpkgCli
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN echo "alias tilesToGpkg='python3 /app/main.py'" >> ~/.bashrc
+RUN echo "alias tilesToGpkg='python3 /_tilesToGpkgCli/main.py'" >> ~/.bashrc
 
 WORKDIR /data
 
