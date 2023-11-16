@@ -1,4 +1,4 @@
-FROM andrejreznik/python-gdal:py3.8.2-gdal3.0.4 AS buildStage
+FROM andrejreznik/python-gdal:py3.8.2-gdal3.0.4
 
 WORKDIR /_tilesToGpkgCli
 COPY . /_tilesToGpkgCli

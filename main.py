@@ -1,11 +1,13 @@
 import argparse, os, logging
 from src.TilesToGpkg import TilesToGpkg
 from src.utils import gpkg_dump, execute_sql
+from src.GpkgToTiles import GpkgToTiles
 
 logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Watch a directory for tiles data, and insert to a GeoPackage.")
+
     parser.add_argument(
         "src_path",
         nargs="?",
@@ -29,7 +31,7 @@ def main():
     )
     parser.add_argument(
         "--watch_patterns",
-        nargs = "+",
+        nargs="+",
         metavar=("FILES_PATTERNS"),
         default=["*.terrain", "layer.json"],
         help="Specify watch patterns if using watcher. Default is ['*.terrain', 'layer.json'].\n"
@@ -40,6 +42,12 @@ def main():
         nargs="+",
         metavar=("DEST_PATH", "SOURCE_PATH"),
         help="Dumps (append) one GeoPackage db to another. Using ogr2ogr.",
+    )
+    parser.add_argument(
+        "--extract",
+        nargs='+',
+        metavar=("OUTPUT_DIR", "SOURCE_GPKG"),
+        help="Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)",
     )
     parser.add_argument(
        '--execute_sql',
@@ -58,10 +66,22 @@ def main():
     logLevel = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(level=logLevel)
 
-    if args.dump:
+    if args.extract is not None and len(args.extract) not in (2, 3):
+        parser.error('OUTPUT_DIR and SOURCE_GPKG are required for the extraction tool')
+    elif args.extract:
+        SOURCE_GPKG, OUTPUT_DIR = args.extract
+        WORKERS = args.extract[2] if len(args.extract) > 2 else None
+        if WORKERS is not None and int(WORKERS) > os.cpu_count():
+            parser.error(f'You cannot use more than {os.cpu_count()} workers in your system.')
+        
+        gpkg_to_tiles = GpkgToTiles(SOURCE_GPKG, OUTPUT_DIR, WORKERS)
+        gpkg_to_tiles.execute()
+        gpkg_to_tiles.work_done.wait()
+        logger.info(f"Extraction Done! Files at {OUTPUT_DIR}")
+
+    elif args.dump:
         if len(args.dump) < 2:
-            logger.error("Error: --dump must be followed by DEST_PATH and at least one SOURCE_PATH.")
-            exit(1)
+            parser.error("Error: --dump must be followed by DEST_PATH and at least one SOURCE_PATH.")
 
         for arg_i in range(len(args.dump) - 1):
             destination = args.dump[0]
@@ -73,22 +93,20 @@ def main():
         logger.info("Successfully merged sources to destination")
         exit(0)
     
-    if args.execute_sql:
+    elif args.execute_sql:
         exit(execute_sql(args.execute_sql[1], args.execute_sql[0]))
 
-    if not os.path.exists(args.src_path):
-        logger.error("Invalid source path. Please specify an existing directory.")
-        exit(1)
+    elif not os.path.exists(args.src_path):
+        parser.error("Invalid source path. Please specify an existing directory.")
 
-    if args.watch and not args.watch_patterns:
-        logger.error("Please specify watch patterns.")
-        exit(1)
-
-    try:
-        tiles_to_gpkg = TilesToGpkg(args.src_path, args.gpkg_path, args.watch, [*args.watch_patterns])
-    except Exception as e:
-        logger.error(f"Error initializing TilesToGpkg: {e}")
-        exit(1)
+    elif args.watch and not args.watch_patterns:
+        parser.error("Please specify watch patterns.")
+    else:
+        try:
+            tiles_to_gpkg = TilesToGpkg(args.src_path, args.gpkg_path, args.watch, [*args.watch_patterns])
+        except Exception as e:
+            logger.error(f"Error initializing TilesToGpkg: {e}")
+            exit(1)
 
 if __name__ == "__main__":
     main()
