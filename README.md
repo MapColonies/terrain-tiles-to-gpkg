@@ -4,6 +4,7 @@
 tilesToGpkg [-h] [--gpkg_path [PATH]] 
                  [--watch] 
                  [--watch_patterns FILES_PATTERNS [FILES_PATTERNS ...]] 
+                 [--extract OUTPUT_DIR SOURCE_GPKG WORKERS = 2]
                  [--dump DEST_PATH [SOURCE_PATH ...]] 
                  [--execute_sql DB_FILE SQL_STATEMENT] 
                  [--debug]
@@ -24,6 +25,7 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 *   **\--debug**: Enable verbose logging for debugging, may hit performance.
 *   **\--dump DUMP \[DUMP ...\]**: Dumps (append) one GeoPackage db to another using ogr2ogr.
 *   **\--execute_sql DB_FILE SQL_STATEMENT** Execute SQL statements on an SQLite3 database.
+*   **\--extract OUTPUT_DIR SOURCE_GPKG WORKERS = 2** Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)
 
 1. **Clone this Repository**
 
@@ -38,7 +40,7 @@ Watch a directory for tiles data and insert them into a GeoPackage.
     ```bash
     docker run -it --name ttgpkg --rm \
     -v "/path/to/your/data/folder":/data \
-    tiles-to-gpkg-cli
+    tiles-to-gpkg-cli:v1.0.0
     ```
 
     Replace `/path/to/your/data/folder` with the actual path to the folder containing your QMESH data.
@@ -57,6 +59,9 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 ##### Populate a GeoPackage from a Directory:
 
 `tilesToGpkg PATH_TO_DIR/terrain_new --watch_patterns "*.terrain" "layer.json" "foo.*"`
+
+##### Extract layer data from GPKG 
+`tilesToGpkg --extract /source.gpkg /output/my_layer_tiles`
 
 #### **Helpers**:
 

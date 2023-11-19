@@ -29,7 +29,13 @@ class OGRConnectionPool:
                 self._in_use[connection] = self._in_use.get(connection, 0) + 1
                 return connection
             else:
-                # No available or occupied connections
+                # Pool is empty
+                # Return connection from _is_use that has the lease connections
+                connection = min(self._in_use, key=self._in_use.get, default=None)
+                if connection:
+                    self._in_use[connection] += 1
+                    return connection
+                
                 return None
 
     def release_connection(self, connection: ogr.DataSource) -> None:

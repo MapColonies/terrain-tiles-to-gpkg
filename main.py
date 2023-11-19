@@ -69,15 +69,14 @@ def main():
     if args.extract is not None and len(args.extract) not in (2, 3):
         parser.error('OUTPUT_DIR and SOURCE_GPKG are required for the extraction tool')
     elif args.extract:
-        SOURCE_GPKG, OUTPUT_DIR = args.extract
-        WORKERS = args.extract[2] if len(args.extract) > 2 else None
+        SOURCE_GPKG = args.extract[0]
+        OUTPUT_DIR = args.extract[1]
+        WORKERS = int(args.extract[2]) if len(args.extract) > 2 else None
         if WORKERS is not None and int(WORKERS) > os.cpu_count():
             parser.error(f'You cannot use more than {os.cpu_count()} workers in your system.')
         
         gpkg_to_tiles = GpkgToTiles(SOURCE_GPKG, OUTPUT_DIR, WORKERS)
         gpkg_to_tiles.execute()
-        gpkg_to_tiles.work_done.wait()
-        logger.info(f"Extraction Done! Files at {OUTPUT_DIR}")
 
     elif args.dump:
         if len(args.dump) < 2:
