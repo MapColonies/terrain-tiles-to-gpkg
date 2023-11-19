@@ -1,4 +1,4 @@
-# tilesToGpkg CLI Usage Examples:
+# tilesToGpkg CLI
 
 ```
 tilesToGpkg [-h] [--gpkg_path [PATH]] 
@@ -11,6 +11,8 @@ tilesToGpkg [-h] [--gpkg_path [PATH]]
 ```
 
 Watch a directory for tiles data and insert them into a GeoPackage.
+
+## **Arguments**
 
 ### **Positional Arguments**:
 
@@ -26,6 +28,8 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 *   **\--dump DUMP \[DUMP ...\]**: Dumps (append) one GeoPackage db to another using ogr2ogr.
 *   **\--execute_sql DB_FILE SQL_STATEMENT** Execute SQL statements on an SQLite3 database.
 *   **\--extract OUTPUT_DIR SOURCE_GPKG WORKERS = 2** Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)
+
+## **Run from Docker**
 
 1. **Clone this Repository**
 
@@ -50,37 +54,84 @@ Watch a directory for tiles data and insert them into a GeoPackage.
     Once inside the container, you can execute `tilesToGpkg` commands on your data.
 
 
-### **Examples**:
+## History Recording for Job Progress
+
+The `tilesToGpkg` CLI includes a history recording feature to keep track of the job progress when building the GeoPackage. This functionality is especially useful in scenarios where the script may have stopped, and you want to resume the process without overriding or duplicating already copied tiles.
+
+### How It Works
+
+When the CLI is used to insert tiles into a GeoPackage, it records the job progress in a history database. This history database keeps track of the directories that have been successfully processed, along with a count of how many tiles have been processed in each directory.
+
+### Managing History Records
+
+If, for any reason, you need to re-run the script for a specific directory that was not fully copied, you can manage the history records using the `--execute_sql` tool provided by the CLI.
+
+#### Example:
+
+To remove the history record for a specific directory (e.g., '12/1234') from the history database and allow the script to consider it for processing again, you can use the following command:
+
+```bash
+tilesToGpkg --execute_sql /path/to/your/output.gpkg.history.sqlite "DELETE FROM history WHERE directory = '12/1234';"
+```
+This ensures that the next run of the script will consider the '12/1234' directory for processing, allowing you to close any gaps in the GeoPackage without restart the whole process from scratch.
+
+### Note on Duplications
+
+When removing a partially complete directory, some files may already have been processed, and duplications might occur. It is up to you to handle duplication removal after the directory is reprocessed. See the "Remove Duplications" in the examples section to learn how to efficiently manage duplications.
+
+### History Database Details
+
+The history database name will be `<output_gpkg_name>.history.sqlite`. It contains a table named `history` with columns `directory` representing the directory path (e.g., '12/1234') and `tiles_count` representing the count of tiles processed in that directory.
+
+### Note
+
+It's important to handle the history database with caution, as modifying it directly can impact the integrity of the job progress tracking. Always ensure that you understand the implications of any changes made to the history records.
+
+## **Examples**
 
 ##### Watch a Directory for Specific File Patterns:
 
-`tilesToGpkg PATH_TO_DIR/terrain_new --watch --watch_patterns "*.terrain" "layer.json" "foo.*"`
+```bash
+tilesToGpkg PATH_TO_DIR/terrain_new --watch --watch_patterns "*.terrain" "layer.json" "foo.*"
+```
 
 ##### Populate a GeoPackage from a Directory:
 
-`tilesToGpkg PATH_TO_DIR/terrain_new --watch_patterns "*.terrain" "layer.json" "foo.*"`
+```bash
+tilesToGpkg PATH_TO_DIR/terrain_new --watch_patterns "*.terrain" "layer.json" "foo.*"
+```
 
 ##### Extract layer data from GPKG 
-`tilesToGpkg --extract /source.gpkg /output/my_layer_tiles`
 
-#### **Helpers**:
+```bash
+tilesToGpkg --extract /source.gpkg /output/my_layer_tiles
+```
+
+## **Helpers**
 
 ##### Dump Data from One GeoPackage to Another:
 
-`tilesToGpkg PATH_TO_DIR/terrain_new --dump DEST_PATH SOURCE_PATH1 SOURCE_PATH2`
+```bash
+tilesToGpkg PATH_TO_DIR/terrain_new --dump DEST_PATH SOURCE_PATH1 SOURCE_PATH2
+```
 
 ##### Execute SQL Statements on an SQLite3 Database:
 
-`tilesToGpkg --execute_sql DB_FILE "SELECT * FROM your_table WHERE condition;"`
+```bash
+tilesToGpkg --execute_sql DB_FILE "SELECT * FROM your_table WHERE condition;"
+```
 
-**Print duplications:**
+##### Print duplications:
 
-`tilesToGpkg --execute_sql DB_FILE "SELECT COUNT(fid), zoom_level, tile_column, tile_row FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row HAVING COUNT(fid) > 1 ORDER BY COUNT(fid) DESC;"`
+```bash
+tilesToGpkg --execute_sql DB_FILE "SELECT COUNT(fid), zoom_level, tile_column, tile_row FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row HAVING COUNT(fid) > 1 ORDER BY COUNT(fid) DESC;"
+```
 
-**Remove duplications:**
+##### Remove duplications:
 
-`tilesToGpkg --execute_sql DB_FILE "DELETE FROM terrain_tiles WHERE fid NOT IN ( SELECT fid FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row)"`
-
+```bash
+tilesToGpkg --execute_sql DB_FILE "DELETE FROM terrain_tiles WHERE fid NOT IN ( SELECT fid FROM terrain_tiles GROUP BY zoom_level, tile_column, tile_row)"
+```
 
 #### **For more information, run `tilesToGpkg --help`**.
 
