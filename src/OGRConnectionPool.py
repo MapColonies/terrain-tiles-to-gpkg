@@ -1,6 +1,5 @@
 from typing import Optional, Dict
-import ogr
-from osgeo import gdal
+from osgeo import gdal, ogr
 import threading
 from queue import Queue
 

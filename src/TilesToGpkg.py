@@ -103,10 +103,10 @@ class TilesToGpkg:
                     logger.debug(f"Skipping {root}")
                     continue
 
-                for filename in files:
-                    if patterns_match(filename, self.watch_patterns):
-                        tile_path = os.path.join(root, filename)
-                        self.process_tile(tile_path)
+            for filename in files:
+                if patterns_match(filename, self.watch_patterns):
+                    tile_path = os.path.join(root, filename)
+                    self.process_tile(tile_path)
         
         logger.info('Indexing GeoPackage...')
         self.ds.ExecuteSQL("CREATE INDEX tiles_idx ON terrain_tiles (zoom_level, tile_column, tile_row)")

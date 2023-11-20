@@ -46,7 +46,7 @@ def main():
     parser.add_argument(
         "--extract",
         nargs='+',
-        metavar=("OUTPUT_DIR", "SOURCE_GPKG"),
+        metavar=("SOURCE_GPKG","OUTPUT_DIR"),
         help="Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)",
     )
     parser.add_argument(

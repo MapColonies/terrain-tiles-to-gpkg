@@ -36,18 +36,19 @@ class GpkgToTiles:
     def extract_layer_json(self, connections_pool: OGRConnectionPool):
         gpkg_ds = connections_pool.get_connection()
 
-        layer = gpkg_ds.GetLayer(LAYER_JSON_TABLE)
-        feature = layer.GetFeature((1))
-        if feature:
-          layer_json_data = feature.GetField("data")
-          layer_json_file_name = os.path.join(self.output_dir, "layer.json")
+        try:
+            layer = gpkg_ds.GetLayer(LAYER_JSON_TABLE)
+            if layer:
+                feature = layer.GetFeature((1))
+                layer_json_data = feature.GetField("data")
+                layer_json_file_name = os.path.join(self.output_dir, "layer.json")
 
-          os.makedirs(self.output_dir, exist_ok=True)
+                os.makedirs(self.output_dir, exist_ok=True)
 
-          with open(layer_json_file_name, 'w') as layer_json_file:
-              layer_json_file.write(layer_json_data)          
-        else:
-            logger.warning('No layer.json found in GPKG')
+                with open(layer_json_file_name, 'w') as layer_json_file:
+                    layer_json_file.write(layer_json_data)         
+        except Exception as e:
+            logger.warning(f'Problem extracting layer.json from gpkg {e}')
             
         connections_pool.release_connection(gpkg_ds)
 

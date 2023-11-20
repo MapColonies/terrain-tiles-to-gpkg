@@ -4,13 +4,45 @@
 tilesToGpkg [-h] [--gpkg_path [PATH]] 
                  [--watch] 
                  [--watch_patterns FILES_PATTERNS [FILES_PATTERNS ...]] 
-                 [--extract OUTPUT_DIR SOURCE_GPKG WORKERS = 2]
+                 [--extract SOURCE_GPKG OUTPUT_DIR [WORKERS = 2]]
                  [--dump DEST_PATH [SOURCE_PATH ...]] 
                  [--execute_sql DB_FILE SQL_STATEMENT] 
                  [--debug]
 ```
 
 Watch a directory for tiles data and insert them into a GeoPackage.
+
+
+## Generated GeoPackage Tables
+
+### terrain_tiles Table
+
+| cid | name       | type       | notnull | pk |
+|----:|------------|------------|--------:|---:|
+|   0 | fid        | INTEGER    |       1 |  1 |
+|   1 | zoom_level | MEDIUMINT  |      0 |  0 |
+|   2 | tile_column | MEDIUMINT |      0 |  0 |
+|   3 | tile_row   | MEDIUMINT  |      0 |  0 |
+|   4 | tile_data  | BLOB (Gzipped QMesh Tile) |      0 |  0 |
+
+### Notes:
+- `fid`: Feature ID
+- `zoom_level`: Zoom level
+- `tile_column`, `tile_row`: Indices
+- `tile_data`: Gzipped QMesh Tile (ready for serving and using by Cesium.JS)
+
+### layer_json Table
+
+| cid | name | type   | notnull | pk |
+|----:|------|--------|--------:|---:|
+|   0 | fid  | INTEGER |      1 |  1 |
+|   1 | data | TEXT    |      0 |  0 |
+
+### Notes:
+- `fid`: Feature ID
+- `data`: JSON representation of layer information
+- The `layer_json` table stores metadata used by Cesium.JS for rendering and interacting with the terrain. It includes information about tile availability, grid system details, and other relevant data required by Cesium.JS.
+
 
 ## **Arguments**
 
@@ -53,6 +85,44 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 
     Once inside the container, you can execute `tilesToGpkg` commands on your data.
 
+## Permission Considerations
+
+### Handling User and Group IDs
+
+If you encounter permission issues when working with files or directories inside the Docker container, it may be related to the user and group IDs used during the image build process. This can lead to mismatches with the user IDs on the host machine.
+
+To address this, we provide flexibility in setting user and group IDs during the Docker image build. The default values are often set based on the first user and group on the host system.
+
+During runtime, if you experience permission problems, you can override the default user and group IDs by using the `-u` option with the `docker run` command.
+
+### Example Scenario
+
+Consider a situation where files created by the `tilesToGpkg` CLI end up locked within the system. This can occur if the CLI creates files with credentials from a different user. In such cases, you might face challenges accessing or modifying those files, leading to potential permission conflicts.
+
+
+### Usage
+
+* If you want to use the default user and group IDs set during the image build, simply run the command as mentioned before:
+```bash
+docker run -it --name ttgpkg --rm \
+-v "/path/to/your/data/folder":/data \
+tiles-to-gpkg-cli:v1.0.0
+```
+
+* If you encounter permission issues and want to override the default user and group IDs at runtime, use the following command:
+```bash
+docker run \
+  -it \
+  -u <your-desired-uid>:<your-desired-gid> \
+  --name ttgpkg \
+  --rm \
+  -v "/path/to/your/data/folder":/data \
+  tiles-to-gpkg-cli:v1.0.0
+```
+Replace `<your-desired-uid>` and `<your-desired-gid>` with the desired user and group IDs. You can use `id -u` and `id -g `on the host machine to find your current user and group IDs.
+
+### Recommendation
+It is recommended to use the default user and group IDs first, as they should fit most use cases. Only adjust the user and group IDs at runtime if you encounter permission issues. This approach provides a balance between flexibility and simplicity, allowing you to address specific issues as needed.
 
 ## History Recording for Job Progress
 
