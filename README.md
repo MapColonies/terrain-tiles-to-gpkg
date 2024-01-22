@@ -59,7 +59,7 @@ Watch a directory for tiles data and insert them into a GeoPackage.
 *   **\--debug**: Enable verbose logging for debugging, may hit performance.
 *   **\--dump DUMP \[DUMP ...\]**: Dumps (append) one GeoPackage db to another using [ogr2ogr](https://gdal.org/programs/ogr2ogr.html#cmdoption-ogr2ogr-append).
 *   **\--execute_sql DB_FILE SQL_STATEMENT** Execute SQL statements on an SQLite3 database.
-*   **\--extract OUTPUT_DIR SOURCE_GPKG WORKERS = 2** Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)
+*   **\--extract SOURCE_GPKG OUTPUT_DIR WORKERS = 2** Extract data from gpkg (generated with this CLI) back to files. Optionally, include the number of workers for parallel processing. (Default 2)
 
 ## **Run from Docker**
 
